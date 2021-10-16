@@ -1,0 +1,69 @@
+version: "3"
+services:
+  golang:
+    container_name: "golang"
+    build:
+      context: .
+      dockerfile: ./docker/go/Dockerfile.dev
+    restart: always
+    volumes:
+      - ./:/app
+    ports:
+      - "8080:3000"
+    networks:
+      - dev
+      
+  mysql:
+    container_name: "mysql"
+    build: ./docker/mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_db:/var/lib/mysql:delegated
+    environment:
+      - MYSQL_DATABASE=go_clean_architecture_web_application_boilerplate
+      - MYSQL_ROOT_PASSWORD=password
+    networks:
+      - dev
+
+  redis-server:
+    image: redis:6.2.5-alpine
+    container_name: redis-server
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: p4ssw0rd
+    command: redis-server --requirepass p4ssw0rd
+    volumes:
+      - redisserverdata:/data
+    tty: true
+    ports:
+      - 6380:6379
+    networks:
+      - dev
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq/
+      - rabbitlog:/var/log/rabbitmq
+    networks:
+      - dev
+
+volumes:
+  mysql_db:
+    driver: local
+  redisserverdata:
+    driver: local
+  rabbitdata:
+    driver: local
+  rabbitlog:
+    driver: local
+
+
+networks:
+  dev:
